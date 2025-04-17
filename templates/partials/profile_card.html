@@ -1,0 +1,70 @@
+<!-- Load this at the top of your template if not already included -->
+<script defer src="//unpkg.com/alpinejs" type="module"></script>
+
+<div x-data="{ expanded: false }"
+     class="bg-white p-4 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300 relative cursor-pointer"
+     @click="expanded = !expanded">
+
+  <!-- Profile Image -->
+  {% if profile.image %}
+    <img src="{{ profile.image.url }}" alt="{{ profile.name }}"
+         class="w-full h-48 object-cover rounded-md mb-4 transition-all duration-300 transform hover:scale-105">
+  {% else %}
+    <div class="w-full h-48 bg-gray-200 flex items-center justify-center rounded-md mb-4 text-gray-500">
+      No Image
+    </div>
+  {% endif %}
+
+  <!-- Basic Info -->
+  <h3 class="text-xl font-semibold text-gray-800">{{ profile.name }}</h3>
+  <p class="text-sm text-gray-600">{{ profile.description|truncatechars:80 }}</p>
+
+  <!-- Expanded Info -->
+  <div x-show="expanded" class="mt-4 space-y-1 text-sm text-gray-700 border-t pt-3">
+    {% if profile.email %}
+      <p><strong>Email:</strong> {{ profile.email }}</p>
+    {% endif %}
+    
+    {% if profile.phone %}
+    <p>
+      <strong>Phone:</strong> {{ profile.phone }}
+      <a href="https://wa.me/91{{ profile.phone|cut:' '|cut:'+'|cut:'-' }}?text=Hi%20{{ profile.name|urlencode }},%20I%20saw%20your%20profile%20on%20Construction%20Connect."
+         target="_blank"
+         class="ml-2 inline-block text-green-600 hover:text-green-700"
+         @click.stop>
+        <!-- WhatsApp Icon -->
+        <svg xmlns="http://www.w3.org/2000/svg" class="inline w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M12.001 2.001a9.936 9.936 0 0 0-7.068 2.929 9.937 9.937 0 0 0-2.93 7.071c0 1.577.369 3.112 1.071 4.502l-1.137 4.164 4.268-1.116a9.95 9.95 0 0 0 4.571 1.149h.001a9.936 9.936 0 0 0 7.068-2.929 9.937 9.937 0 0 0 2.93-7.071c0-2.672-1.041-5.182-2.93-7.071A9.937 9.937 0 0 0 12.001 2.001zm.005 17.996a8.01 8.01 0 0 1-4.074-1.109l-.292-.172-2.528.661.676-2.492-.19-.3a8.007 8.007 0 1 1 6.408 3.412zm4.261-5.903c-.232-.117-1.372-.676-1.584-.753s-.367-.117-.522.118-.6.752-.737.906-.271.176-.503.059a6.51 6.51 0 0 1-1.914-1.176 7.186 7.186 0 0 1-1.327-1.649c-.139-.236-.015-.363.104-.48.108-.107.239-.278.36-.418.119-.14.159-.234.239-.39s.04-.293-.02-.41c-.059-.117-.522-1.26-.715-1.724-.188-.451-.38-.391-.522-.399-.136-.008-.293-.01-.45-.01s-.41.058-.625.293c-.214.234-.841.822-.841 2.004s.861 2.327.98 2.488c.119.159 1.692 2.585 4.102 3.625.574.247 1.022.395 1.37.505.575.183 1.098.157 1.51.096.461-.068 1.372-.561 1.566-1.102.193-.541.193-1.004.135-1.102-.057-.099-.209-.159-.439-.276z"/>
+        </svg>
+      </a>
+    </p>
+    
+    
+    {% endif %}
+    
+    {% if profile.specialization %}
+      <p><strong>Specialization:</strong> {{ profile.specialization }}</p>
+    {% endif %}
+    
+    {% if profile.experience %}
+      <p><strong>Experience:</strong> {{ profile.experience }} years</p>
+    {% endif %}
+    
+    {% if profile.license_no %}
+      <p><strong>License No:</strong> {{ profile.license_no }}</p>
+    {% endif %}
+    
+    {% if profile.license_file %}
+      <p>
+        <strong>License File:</strong>
+        <a href="{{ profile.license_file.url }}" target="_blank" class="text-blue-600 underline">View</a>
+      </p>
+    {% endif %}
+  </div>
+  
+  <!-- Toggle Label -->
+  <div class="absolute bottom-4 right-4 text-xs text-gray-500">
+    <span x-show="!expanded">Click to expand</span>
+    <span x-show="expanded">Click to collapse</span>
+  </div>
+</div>

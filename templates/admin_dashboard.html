@@ -1,0 +1,160 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load widget_tweaks %}
+
+{% block content %}
+<div class="container mx-auto px-6 py-12" x-data="{ viewApproved: false }">
+  <h1 class="text-3xl font-bold mb-8 text-center">Profile Management</h1>
+
+  <!-- Category Filters -->
+  <div class="flex justify-center space-x-4 mb-6">
+    {% for cat in categories %}
+      <a href="?category={{ cat }}"
+         class="px-4 py-2 rounded-lg font-semibold border
+         {% if cat == category %}bg-blue-800 text-white{% else %}bg-white text-blue-800 border-blue-800{% endif %}
+         hover:bg-blue-700 hover:text-white transition">
+        {{ cat|capfirst }}s
+      </a>
+    {% endfor %}
+  </div>
+
+  <!-- Toggle Button for Approved/Pending View -->
+  <div class="text-center mb-10">
+    <button @click="viewApproved = !viewApproved"
+            class="px-6 py-2 bg-indigo-600 text-white font-semibold rounded hover:bg-indigo-500 transition">
+      <span x-show="!viewApproved">Show Approved Profiles</span>
+      <span x-show="viewApproved">Show Pending Approvals</span>
+    </button>
+  </div>
+
+  <!-- Pending Profiles -->
+  <div x-show="!viewApproved" x-transition>
+    {% if profiles %}
+      <div class="space-y-6">
+        {% for profile in profiles %}
+          <div x-data="{ expanded: false }" class="bg-white shadow-md rounded-xl p-6 border transition-all duration-300" :class="expanded ? 'ring-2 ring-blue-300' : ''">
+            <div class="flex flex-col md:flex-row justify-between items-center gap-6">
+              <div class="flex items-center gap-6">
+                {% if profile.image %}
+                  <img src="{{ profile.image.url }}" alt="{{ profile.name }}" class="w-20 h-20 object-cover rounded-full border border-gray-300 shadow-sm">
+                {% else %}
+                  <div class="w-20 h-20 bg-gray-200 rounded-full flex items-center justify-center text-gray-500">No Image</div>
+                {% endif %}
+                <div>
+                  <h2 class="text-xl font-semibold">{{ profile.name }}</h2>
+                  <p class="text-gray-600 mt-1">{{ profile.description|truncatechars:80 }}</p>
+                  <p class="text-sm text-gray-500"><strong>Email:</strong> {{ profile.email }}</p>
+                  <p class="text-sm text-gray-500"><strong>Category:</strong> {{ profile.category|capfirst }}</p>
+                </div>
+              </div>
+              <div class="flex flex-col gap-2 md:flex-row md:gap-4 mt-4 md:mt-0">
+                <button @click="expanded = !expanded" type="button"
+                  class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-500 transition">
+                  <span x-show="!expanded">View</span>
+                  <span x-show="expanded">Hide</span>
+                </button>
+
+                <form method="POST" action="{% url 'approve_profile' profile.id %}">
+                  {% csrf_token %}
+                  <button class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-500 transition">
+                    Approve
+                  </button>
+                </form>
+
+                <form method="POST" action="{% url 'reject_profile' profile.id %}">
+                  {% csrf_token %}
+                  <button class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-500 transition">
+                    Reject
+                  </button>
+                </form>
+              </div>
+            </div>
+
+            <!-- Expandable Details -->
+            <div x-show="expanded" x-collapse class="mt-6 border-t pt-4 text-gray-700 space-y-2">
+              {% if profile.license_no %}
+                <p><strong>License No:</strong> {{ profile.license_no }}</p>
+              {% endif %}
+              {% if profile.specialization %}
+                <p><strong>Specialization:</strong> {{ profile.specialization }}</p>
+              {% endif %}
+              {% if profile.experience %}
+                <p><strong>Experience:</strong> {{ profile.experience }} years</p>
+              {% endif %}
+              {% if profile.phone %}
+                <p><strong>Phone:</strong> {{ profile.phone }}</p>
+              {% endif %}
+              {% if profile.license_file %}
+                <p><strong>License File:</strong> <a href="{{ profile.license_file.url }}" target="_blank" class="text-blue-600 underline">View</a></p>
+              {% endif %}
+              {% if profile.description %}
+                <p><strong>Bio:</strong> {{ profile.description }}</p>
+              {% endif %}
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p class="text-gray-600 text-center">No pending profiles for approval.</p>
+    {% endif %}
+  </div>
+
+  <!-- Approved Profiles -->
+  <div x-show="viewApproved" x-transition>
+    {% if approved_profiles %}
+      <div class="text-right mb-6">
+        <form method="POST" action="{% url 'delete_all_profiles' category %}">
+          {% csrf_token %}
+          <button class="bg-red-700 text-white px-6 py-2 rounded hover:bg-red-600 transition">Delete All</button>
+        </form>        
+      </div>
+
+      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for profile in approved_profiles %}
+          <div class="bg-white rounded-xl shadow p-6 relative">
+            <div class="flex items-center gap-4">
+              {% if profile.image %}
+                <img src="{{ profile.image.url }}" class="w-16 h-16 rounded-full object-cover border">
+              {% endif %}
+              <div>
+                <h2 class="text-lg font-bold">{{ profile.name }}</h2>
+                <p class="text-sm text-gray-600">{{ profile.specialization }}</p>
+                <p class="text-xs text-gray-500">{{ profile.email }}</p>
+              </div>
+            </div>
+            <form method="POST" action="/dashboard/delete/{{ profile.id }}/">
+             {% csrf_token %}
+              <button class="text-red-600 hover:text-red-800 text-sm mt-2">Delete</button>
+            </form>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p class="text-center text-gray-600">No approved profiles to display.</p>
+    {% endif %}
+  </div>
+
+  <!-- Feedback Section -->
+  <div class="mt-20">
+    <h2 class="text-2xl font-bold text-center mb-6">User Feedback</h2>
+
+    {% if feedbacks %}
+      <div class="grid md:grid-cols-2 gap-6">
+        {% for fb in feedbacks %}
+          <div class="bg-gray-100 p-6 rounded-xl shadow-sm relative">
+            <p class="text-gray-700 italic">“{{ fb.message }}”</p>
+            <p class="text-sm text-gray-500 mt-4 text-right">- {{ fb.name }}</p>
+            
+            <form action="{% url 'delete_feedback' fb.id %}" method="POST" class="absolute top-2 right-2">
+              {% csrf_token %}
+              <button type="submit" class="text-red-600 hover:text-red-800 text-xs">Delete</button>
+            </form>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p class="text-center text-gray-600">No feedback yet.</p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
